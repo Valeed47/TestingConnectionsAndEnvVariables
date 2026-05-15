@@ -125,14 +125,14 @@ jobs:
           $connRefId = $connRefResponse.value[0].connectionreferenceid
           Write-Host "✅ Connection Reference ID: $connRefId"
 
-          # Update Connection Reference
+          # Update Connection Reference with CORRECT format
           $updateUrl = "$envUrl/api/data/v9.2/connectionreferences($connRefId)"
           $updateBody = @{
-            connectionid = "/providers/Microsoft.PowerApps/apis/shared_commondataservice/connections/$connectionId"
+            connectionid = $connectionId
           } | ConvertTo-Json
 
           Invoke-RestMethod -Method Patch -Uri $updateUrl -Headers $headers -Body $updateBody
-          Write-Host "✅ Connection Reference UPDATED!"
+          Write-Host "✅ Connection Reference UPDATED successfully!"
 
       - name: Publish All Customizations
         uses: microsoft/powerplatform-actions/publish-solution@v1
