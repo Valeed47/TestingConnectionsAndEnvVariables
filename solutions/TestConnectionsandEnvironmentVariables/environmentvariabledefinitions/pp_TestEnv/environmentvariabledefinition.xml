@@ -1,7 +1,7 @@
-<environmentvariabledefinition schemaname="pp_EnvironmentName">
-  <defaultvalue>Demo - DEV</defaultvalue>
-  <displayname default="Environment Name">
-    <label description="Environment Name" languagecode="1033" />
+<environmentvariabledefinition schemaname="pp_TestEnv">
+  <defaultvalue>Test1</defaultvalue>
+  <displayname default="Test Env">
+    <label description="Test Env" languagecode="1033" />
   </displayname>
   <introducedversion>1.0.0.0</introducedversion>
   <iscustomizable>1</iscustomizable>
