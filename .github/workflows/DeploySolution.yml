@@ -1,1 +1,49 @@
-Test
+name: Deploy Solution to Test Environment
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Install Power Platform Tools
+        uses: microsoft/powerplatform-actions/actions-install@v1
+
+      - name: Import Managed Solution to Target
+        uses: microsoft/powerplatform-actions/import-solution@v1
+        with:
+          environment-url: ${{ secrets.PP_TARGET_ENV_URL }}
+          app-id: ${{ secrets.PP_CLIENT_ID }}
+          client-secret: ${{ secrets.PP_CLIENT_SECRET }}
+          tenant-id: ${{ secrets.PP_TENANT_ID }}
+          solution-file: ./exported/solution_managed.zip
+          force-overwrite: true
+          publish-changes: true
+          run-asynchronously: true
+          max-async-wait-time: 60
+
+      - name: Publish All Customizations
+        uses: microsoft/powerplatform-actions/publish-solution@v1
+        with:
+          environment-url: ${{ secrets.PP_TARGET_ENV_URL }}
+          app-id: ${{ secrets.PP_CLIENT_ID }}
+          client-secret: ${{ secrets.PP_CLIENT_SECRET }}
+          tenant-id: ${{ secrets.PP_TENANT_ID }}
+
+      - name: Deployment Done
+        shell: pwsh
+        run: |
+          Write-Host "Import and publish completed successfully"
+          Write-Host "Target env: ${{ secrets.PP_TARGET_ENV_URL }}"
+          Write-Host "Completed at: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
