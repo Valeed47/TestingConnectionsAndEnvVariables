@@ -28,10 +28,111 @@ jobs:
           tenant-id: ${{ secrets.PP_TENANT_ID }}
           solution-file: ./exported/solution_managed.zip
           force-overwrite: true
-          publish-changes: true
+          publish-changes: false
           run-asynchronously: true
           max-async-wait-time: 60
           deployment-settings-file: ./config/deploymentsettings.json
+
+      - name: Set Environment Variable in Target
+        shell: pwsh
+        run: |
+          Write-Host "Setting environment variable..."
+
+          $tenantId     = "${{ secrets.PP_TENANT_ID }}"
+          $clientId     = "${{ secrets.PP_CLIENT_ID }}"
+          $clientSecret = "${{ secrets.PP_CLIENT_SECRET }}"
+          $envUrl       = "${{ secrets.PP_TARGET_ENV_URL }}"
+
+          # Get Access Token
+          $tokenUrl = "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token"
+          $body = @{
+            grant_type    = "client_credentials"
+            client_id     = $clientId
+            client_secret = $clientSecret
+            scope         = "$envUrl/.default"
+          }
+
+          $tokenResponse = Invoke-RestMethod -Method Post -Uri $tokenUrl -Body $body
+          $accessToken = $tokenResponse.access_token
+          Write-Host "✅ Token obtained"
+
+          # Get Environment Variable Definition ID
+          $headers = @{
+            Authorization  = "Bearer $accessToken"
+            "Content-Type" = "application/json"
+          }
+
+          $defUrl = "$envUrl/api/data/v9.2/environmentvariabledefinitions?`$filter=schemaname eq 'pp_testenv'&`$select=environmentvariabledefinitionid"
+          $defResponse = Invoke-RestMethod -Method Get -Uri $defUrl -Headers $headers
+          $definitionId = $defResponse.value[0].environmentvariabledefinitionid
+          Write-Host "✅ Definition ID: $definitionId"
+
+          # Check if Current Value exists
+          $valUrl = "$envUrl/api/data/v9.2/environmentvariablevalues?`$filter=_environmentvariabledefinitionid_value eq '$definitionId'&`$select=environmentvariablevalueid"
+          $valResponse = Invoke-RestMethod -Method Get -Uri $valUrl -Headers $headers
+
+          if ($valResponse.value.Count -gt 0) {
+            # Update existing value
+            $valueId = $valResponse.value[0].environmentvariablevalueid
+            $updateUrl = "$envUrl/api/data/v9.2/environmentvariablevalues($valueId)"
+            $updateBody = @{ value = "Target" } | ConvertTo-Json
+            Invoke-RestMethod -Method Patch -Uri $updateUrl -Headers $headers -Body $updateBody
+            Write-Host "✅ Environment Variable UPDATED to: Target"
+          } else {
+            # Create new value
+            $createUrl = "$envUrl/api/data/v9.2/environmentvariablevalues"
+            $createBody = @{
+              value = "Target"
+              "EnvironmentVariableDefinitionId@odata.bind" = "/environmentvariabledefinitions($definitionId)"
+            } | ConvertTo-Json
+            Invoke-RestMethod -Method Post -Uri $createUrl -Headers $headers -Body $createBody
+            Write-Host "✅ Environment Variable CREATED with value: Target"
+          }
+
+      - name: Set Connection Reference in Target
+        shell: pwsh
+        run: |
+          Write-Host "Setting connection reference..."
+
+          $tenantId     = "${{ secrets.PP_TENANT_ID }}"
+          $clientId     = "${{ secrets.PP_CLIENT_ID }}"
+          $clientSecret = "${{ secrets.PP_CLIENT_SECRET }}"
+          $envUrl       = "${{ secrets.PP_TARGET_ENV_URL }}"
+          $connectionId = "${{ secrets.PP_TARGET_CONNECTION_ID }}"
+          $logicalName  = "pp_sharedcommondataserviceforapps_c8b12"
+
+          # Get Access Token
+          $tokenUrl = "https://login.microsoftonline.com/$tenantId/oauth2/v2.0/token"
+          $body = @{
+            grant_type    = "client_credentials"
+            client_id     = $clientId
+            client_secret = $clientSecret
+            scope         = "$envUrl/.default"
+          }
+
+          $tokenResponse = Invoke-RestMethod -Method Post -Uri $tokenUrl -Body $body
+          $accessToken = $tokenResponse.access_token
+          Write-Host "✅ Token obtained"
+
+          $headers = @{
+            Authorization  = "Bearer $accessToken"
+            "Content-Type" = "application/json"
+          }
+
+          # Get Connection Reference ID
+          $connRefUrl = "$envUrl/api/data/v9.2/connectionreferences?`$filter=connectionreferencelogicalname eq '$logicalName'&`$select=connectionreferenceid"
+          $connRefResponse = Invoke-RestMethod -Method Get -Uri $connRefUrl -Headers $headers
+          $connRefId = $connRefResponse.value[0].connectionreferenceid
+          Write-Host "✅ Connection Reference ID: $connRefId"
+
+          # Update Connection Reference
+          $updateUrl = "$envUrl/api/data/v9.2/connectionreferences($connRefId)"
+          $updateBody = @{
+            connectionid = "/providers/Microsoft.PowerApps/apis/shared_commondataservice/connections/$connectionId"
+          } | ConvertTo-Json
+
+          Invoke-RestMethod -Method Patch -Uri $updateUrl -Headers $headers -Body $updateBody
+          Write-Host "✅ Connection Reference UPDATED!"
 
       - name: Publish All Customizations
         uses: microsoft/powerplatform-actions/publish-solution@v1
@@ -44,6 +145,6 @@ jobs:
       - name: Deployment Done
         shell: pwsh
         run: |
-          Write-Host "Import and publish completed successfully"
-          Write-Host "Target env: ${{ secrets.PP_TARGET_ENV_URL }}"
-          Write-Host "Completed at: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+          Write-Host "✅ Deployment completed successfully!"
+          Write-Host "🌍 Target: ${{ secrets.PP_TARGET_ENV_URL }}"
+          Write-Host "⏰ Time: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
