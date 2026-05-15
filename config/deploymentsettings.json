@@ -1,7 +1,7 @@
 {
   "EnvironmentVariables": [
     {
-      "SchemaName": "pp_EnvironmentName",
+      "SchemaName": "pp_TestEnv",
       "Value": "Target"
     }
   ],
