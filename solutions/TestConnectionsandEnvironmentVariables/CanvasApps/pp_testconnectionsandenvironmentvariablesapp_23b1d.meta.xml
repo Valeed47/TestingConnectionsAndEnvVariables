@@ -26,9 +26,9 @@
   <IntroducedVersion>1.0</IntroducedVersion>
   <CdsDependencies>{"cdsdependencies":[]}</CdsDependencies>
   <IsCustomizable>1</IsCustomizable>
-  <BackgroundImageUri>/CanvasApps/pp_testconnectionsandenvironmentvariablesapp_64807_BackgroundImageUri</BackgroundImageUri>
-  <DocumentUri>/CanvasApps/pp_testconnectionsandenvironmentvariablesapp_25758_DocumentUri.msapp</DocumentUri>
+  <BackgroundImageUri>/CanvasApps/pp_testconnectionsandenvironmentvariablesapp_45874_BackgroundImageUri</BackgroundImageUri>
+  <DocumentUri>/CanvasApps/pp_testconnectionsandenvironmentvariablesapp_96876_DocumentUri.msapp</DocumentUri>
   <AdditionalUris>
-    <AdditionalUri>/CanvasApps/pp_testconnectionsandenvironmentvariablesapp_71518_AdditionalUris0_identity.json</AdditionalUri>
+    <AdditionalUri>/CanvasApps/pp_testconnectionsandenvironmentvariablesapp_04345_AdditionalUris0_identity.json</AdditionalUri>
   </AdditionalUris>
 </CanvasApp>
